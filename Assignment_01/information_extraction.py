@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# Assignment1
+# Assignment1 - information_extraction
 # - import libraries
 
 # In[1]:
@@ -579,29 +579,6 @@ def answer_question(question):
     for answer in answers:
         print(answer)
 
-
-# #Test
-# sents = ["Who does Bob like?"]
-# question_triplet = cl.extract_triples(sents)[0]
-# print(question_triplet)
-# answers = []
-# test = []
-# # (WHO, like, P)
-# elif question_triplet.subject.lower() == 'who' and question_triplet.predicate.lower() == 'likes':
-#     o_person = select_person(question_triplet.object)
-#     answer = '{} like {}.'
-#     for person in persons:
-#         if o_person in person.likes:
-#             answers.append(answer.format(person,o_person))
-# # (WHO, does P, like)
-# elif question_triplet.object.lower() == 'who' and question_triplet.predicate.lower() == 'does like':
-#     s_person = select_person(question_triplet.subject)
-#     answer = '{} like {}.'
-#     for person in persons:
-#         if person in s_person.likes:
-#             answers.append(answer.format(s_person, person))
-#             
-# print(answers)
 
 # In[24]:
 
