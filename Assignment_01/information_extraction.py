@@ -83,17 +83,31 @@ trips = []
 # In[7]:
 
 
-def process_data_from_input_file(file_path='./assignment_01.data'):
+def get_data_from_file(file_path='./assignment_01.data'):
     with open(file_path) as infile:
         cleaned_lines = [line.strip() for line in infile if not line.startswith(('$$$', '###', '==='))]
     return cleaned_lines
+
+
+# In[8]:
+
+
+def process_data_from_input_file(path='assignment_01.data'):
+    sents = get_data_from_file(path)
+    cl = ClausIE.get_instance()
+    triples = cl.extract_triples(sents)
+    try:
+        process_relation_triplet(triples)
+    except Exception as e:
+        print("""There was an error when processing following triplet in the data file: {}\nSENT: {}\nERROR: {}\n\n""".format(t, sents[int(t.index)], e))
+
 
 
 # - Define select_person + add_person function  
 #     #If input name is one person's name who is in the persons list, return it.  
 #     #If not, add this person to the persons list.
 
-# In[8]:
+# In[9]:
 
 
 def select_person(name):
@@ -102,7 +116,7 @@ def select_person(name):
             return person
 
 
-# In[9]:
+# In[10]:
 
 
 def add_person(name):
@@ -119,7 +133,7 @@ def add_person(name):
 #     #If not, add this pet to the persons list.  
 #     #get the persons has a pet
 
-# In[10]:
+# In[11]:
 
 
 def select_pet(name):
@@ -128,7 +142,7 @@ def select_pet(name):
             return pet
 
 
-# In[11]:
+# In[12]:
 
 
 def add_pet(type, name=None):
@@ -141,7 +155,7 @@ def add_pet(type, name=None):
     return pet
 
 
-# In[12]:
+# In[13]:
 
 
 def get_persons_pet(person_name):
@@ -153,7 +167,7 @@ def get_persons_pet(person_name):
 
 # - Define function related to trip
 
-# In[13]:
+# In[14]:
 
 
 def select_trip(desintation,time):
@@ -162,7 +176,7 @@ def select_trip(desintation,time):
             return trip
 
 
-# In[14]:
+# In[15]:
 
 
 def add_trip(destination, time):
@@ -176,7 +190,7 @@ def add_trip(destination, time):
     return trip
 
 
-# In[15]:
+# In[16]:
 
 
 def get_persons_trip(person_name):
@@ -186,7 +200,7 @@ def get_persons_trip(person_name):
             return trip
 
 
-# In[16]:
+# In[17]:
 
 
 def get_persons_trips(person_name):
@@ -196,7 +210,7 @@ def get_persons_trips(person_name):
 
 # - define function related to likes or not_likes
 
-# In[17]:
+# In[18]:
 
 
 def get_persons_likes(person_name):
@@ -205,7 +219,7 @@ def get_persons_likes(person_name):
     return o_persons
 
 
-# In[18]:
+# In[19]:
 
 
 def get_persons_not_likes(person_name):
@@ -214,7 +228,7 @@ def get_persons_not_likes(person_name):
     return o_persons
 
 
-# In[19]:
+# In[20]:
 
 
 def get_pets_likes(pet_name):
@@ -225,7 +239,7 @@ def get_pets_likes(pet_name):
 
 # - Define process_relation_triplet function
 
-# In[20]:
+# In[21]:
 
 
 def process_relation_triplet(triples):
@@ -417,7 +431,7 @@ def process_relation_triplet(triples):
 #     #remove a, an, the  
 #     #question who, what
 
-# In[21]:
+# In[22]:
 
 
 def preprocess_question(question):
@@ -430,7 +444,7 @@ def preprocess_question(question):
     return re.sub(re_spaces, ' ', ' '.join(q_words))
 
 
-# In[22]:
+# In[23]:
 
 
 def has_question_word(string):
@@ -442,7 +456,7 @@ def has_question_word(string):
     return False
 
 
-# In[23]:
+# In[24]:
 
 
 def answer_question(question):
@@ -580,26 +594,16 @@ def answer_question(question):
         print(answer)
 
 
-# In[24]:
+# In[25]:
 
 
 def main():
-    sents = process_data_from_input_file()
-    cl = ClausIE.get_instance()
-    triples = cl.extract_triples(sents)
-    process_relation_triplet(triples)
-        
-    question = ' '
-    while question[-1] != '?':
-        question = raw_input("Please enter your question: ")
-        if question[-1] != '?':
-            print('This is not a question... please try again')
-    
-    answer_question(question)
-    
+    process_data_from_input_file()
+    answer_question('Who has a dog?')
+    answer_question('Who likes Mary?')
 
 
-# In[ ]:
+# In[26]:
 
 
 if __name__ == '__main__':
