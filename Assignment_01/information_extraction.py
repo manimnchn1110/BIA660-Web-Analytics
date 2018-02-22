@@ -460,147 +460,168 @@ def has_question_word(string):
 
 
 def answer_question(question):
-    question_triplet = cl.extract_triples([preprocess_question(question)])[0]
-    answers = []
-    o_person = None
-    # (WHO, has, dog)
-    if question_triplet.subject.lower() == 'who' and question_triplet.object == 'dog':
-        answer = '{} has a {} named {}.'
-        for person in persons:
-            pet = get_persons_pet(person.name)
-            if pet and pet.type == 'dog':
-                answers.append(answer.format(person.name, 'dog', pet.name))
-    # (WHO, has, cat)
-    elif question_triplet.subject.lower() == 'who' and question_triplet.object == 'cat':
-        answer = '{} has a {} named {}.'
-        for person in persons:
-            pet = get_persons_pet(person.name)
-            if pet and pet.type == 'cat':
-                answers.append(answer.format(person.name, 'cat', pet.name))
-                
-    # (WHO, travel, place)
-    elif (question_triplet.subject.lower() == 'who') and (question_triplet.predicate == 'is going' or
-                                                            question_triplet.predicate == 'is flying' or
-                                                            question_triplet.predicate =='is traveling'): 
-        if question_triplet.object.lower() == 'to france':
-            answer = '{} has a trip to France in {}.'
+    global answers, question_triplet
+    try:
+        answers = []
+        question_triplet = None
+        question_triplet = cl.extract_triples([preprocess_question(question)])[0]
+        o_person = None
+        # (WHO, has, dog)
+        if question_triplet.subject.lower() == 'who' and question_triplet.object == 'dog':
+            answer = '{} has a {} named {}.'
             for person in persons:
-                trip = get_persons_trip(person.name)
-                if trip and trip.name.text.lower() == 'france':
-                    answers.append(answer.format(person.name, trip.time))
-                        
-        elif question_triplet.object.lower() == 'to japan':
-            answer = '{} has a trip to Japan {}.'
+                pet = get_persons_pet(person.name)
+                if pet and pet.type == 'dog':
+                    answers.append(answer.format(person.name, 'dog', pet.name))
+        # (WHO, has, cat)
+        elif question_triplet.subject.lower() == 'who' and question_triplet.object == 'cat':
+            answer = '{} has a {} named {}.'
             for person in persons:
-                trip = get_persons_trip(person.name)
-                if trip and trip.name.text.lower() == 'japan':
-                    answers.append(answer.format(person.name, trip.time))
-                        
-                  
-        elif question_triplet.object.lower() == 'to peru':
-            answer = '{} has a trip to Peru on {}.'
-            for person in persons:
-                trip = get_persons_trip(person.name)
-                if trip and trip.name.text.lower() == 'peru':
-                    answers.append(answer.format(person.name, trip.time))
-                        
-                  
-        elif question_triplet.object.lower() == 'to mexico':
-            answer = '{} has a trip to Mexico in {}.'
-            for person in persons:
-                trips = get_persons_trips(person.name)
-                for trip in trips:
-                    if trip.name.text.lower() == 'mexico':
-                        answers.append(answer.format(person.name, trip.time))                
-        else:
-            answers.append("I don't know.")
-            
-    elif ('when' in question_triplet.object.lower()) and (question_triplet.predicate == 'is going' or
-                                                        question_triplet.predicate == 'is flying' or
-                                                        question_triplet.predicate =='is traveling'): 
-        if 'to france' in question_triplet.object.lower() and select_person(question_triplet.subject) in persons:
-            answer = '{} has a trip to France in {}.'
-            for person in persons:
-                trips = get_persons_trips(person.name)
-                for trip in trips:
-                    if trip.name.text.lower() == 'france' and person.name == question_triplet.subject:
-                        answers.append(answer.format(person.name, trip.time)) 
-        elif 'to japan' in question_triplet.object.lower() and select_person(question_triplet.subject) in persons:
-            answer = '{} has a trip to Japan {}.'
-            for person in persons:
-                trips = get_persons_trips(person.name)
-                for trip in trips:
-                    if trip.name.text.lower() == 'japan' and person.name == question_triplet.subject:
-                        answers.append(answer.format(person.name, trip.time)) 
-        elif 'to peru' in question_triplet.object.lower() and select_person(question_triplet.subject) in persons:
-            answer = '{} has a trip to Peru on {}.'
-            for person in persons:
-                trips = get_persons_trips(person.name)
-                for trip in trips:
-                    if trip.name.text.lower() == 'peru' and person.name == question_triplet.subject:
-                        answers.append(answer.format(person.name, trip.time)) 
-        elif 'to mexico' in question_triplet.object.lower() and select_person(question_triplet.subject) in persons:
-            answer = '{} has a trip to Mexico in {}.'
-            for person in persons:
-                trips = get_persons_trips(person.name)
-                for trip in trips:
-                    if trip.name.text.lower() == 'mexico' and person.name == question_triplet.subject:
-                        answers.append(answer.format(person.name, trip.time)) 
-        else:
-            answers.append("I don't know.")
-    
-    #(who, like, p)
-    elif question_triplet.subject.lower() == 'who' and question_triplet.predicate.lower() == 'likes':
-        o_person = select_person(question_triplet.object)
-        answer = '{} like {}.'
-        for person in persons:
-            if o_person in person.likes:
-                answers.append(answer.format(person,o_person))
-    # (WHO, does P, like)
-    elif question_triplet.object.lower() == 'who' and question_triplet.predicate.lower() == 'does like':
-        s_person = select_person(question_triplet.subject)
-        answer = '{} like {}.'
-        for person in persons:
-            if person in s_person.likes:
-                answers.append(answer.format(s_person, person))
-                
-    #(DOES, P, like, P)
-    elif (question_triplet.subject.startswith('Does') or question_triplet[0].subject.startswith('does')) and question_triplet.predicate == 'like':
-            sentence = question_triplet.subject + ' ' + question_triplet.predicate + ' ' + question_triplet.object
-            doc = nlp(unicode(sentence))
-            for t in doc:
-                #print(t.text, t.pos_, t.head, t.ent_type_)
-                if t.pos_ == 'PROPN' and (t.text in question_triplet.subject):
-                    s_person = select_person(t.text)
-                if t.pos_ == 'PROPN' and (t.text in question_triplet.object):
-                    o_person = select_person(t.text)
-            like_persons = get_persons_likes(s_person.name)
-            not_like_persons = get_persons_not_likes(s_person.name)
-            if o_person in like_persons:
-                answer = "Yes, {} likes {}."
-                answers.append(answer.format(s_person.name, o_person.name))
-            elif o_person in not_like_persons:
-                answer = "No, {} doesn't like {}."
-                answers.append(answer.format(s_person.name, o_person.name))
+                pet = get_persons_pet(person.name)
+                if pet and pet.type == 'cat':
+                    answers.append(answer.format(person.name, 'cat', pet.name))
 
+        # (WHO, travel, place)
+        elif (question_triplet.subject.lower() == 'who') and (question_triplet.predicate == 'is going' or
+                                                                question_triplet.predicate == 'is flying' or
+                                                                question_triplet.predicate =='is traveling'):
+            if question_triplet.object.lower() == 'to france':
+                answer = '{} has a trip to France in {}.'
+                for person in persons:
+                    trip = get_persons_trip(person.name)
+                    if trip and trip.name.text.lower() == 'france':
+                        answers.append(answer.format(person.name, trip.time))
+
+            elif question_triplet.object.lower() == 'to japan':
+                answer = '{} has a trip to Japan {}.'
+                for person in persons:
+                    trip = get_persons_trip(person.name)
+                    if trip and trip.name.text.lower() == 'japan':
+                        answers.append(answer.format(person.name, trip.time))
+
+
+            elif question_triplet.object.lower() == 'to peru':
+                answer = '{} has a trip to Peru on {}.'
+                for person in persons:
+                    trip = get_persons_trip(person.name)
+                    if trip and trip.name.text.lower() == 'peru':
+                        answers.append(answer.format(person.name, trip.time))
+
+
+            elif question_triplet.object.lower() == 'to mexico':
+                answer = '{} has a trip to Mexico in {}.'
+                for person in persons:
+                    trips = get_persons_trips(person.name)
+                    for trip in trips:
+                        if trip.name.text.lower() == 'mexico':
+                            answers.append(answer.format(person.name, trip.time))
             else:
                 answers.append("I don't know.")
 
-                    
-    else:
-        answers.append("I don't know.")
-        
+        elif ('when' in question_triplet.object.lower()) and (question_triplet.predicate == 'is going' or
+                                                            question_triplet.predicate == 'is flying' or
+                                                            question_triplet.predicate =='is traveling'):
+            if 'to france' in question_triplet.object.lower() and select_person(question_triplet.subject) in persons:
+                answer = '{} has a trip to France in {}.'
+                for person in persons:
+                    trips = get_persons_trips(person.name)
+                    for trip in trips:
+                        if trip.name.text.lower() == 'france' and person.name == question_triplet.subject:
+                            answers.append(answer.format(person.name, trip.time))
+            elif 'to japan' in question_triplet.object.lower() and select_person(question_triplet.subject) in persons:
+                answer = '{} has a trip to Japan {}.'
+                for person in persons:
+                    trips = get_persons_trips(person.name)
+                    for trip in trips:
+                        if trip.name.text.lower() == 'japan' and person.name == question_triplet.subject:
+                            answers.append(answer.format(person.name, trip.time))
+            elif 'to peru' in question_triplet.object.lower() and select_person(question_triplet.subject) in persons:
+                answer = '{} has a trip to Peru on {}.'
+                for person in persons:
+                    trips = get_persons_trips(person.name)
+                    for trip in trips:
+                        if trip.name.text.lower() == 'peru' and person.name == question_triplet.subject:
+                            answers.append(answer.format(person.name, trip.time))
+            elif 'to mexico' in question_triplet.object.lower() and select_person(question_triplet.subject) in persons:
+                answer = '{} has a trip to Mexico in {}.'
+                for person in persons:
+                    trips = get_persons_trips(person.name)
+                    for trip in trips:
+                        if trip.name.text.lower() == 'mexico' and person.name == question_triplet.subject:
+                            answers.append(answer.format(person.name, trip.time))
+            else:
+                answers.append("I don't know.")
+
+        #(who, like, p)
+        elif question_triplet.subject.lower() == 'who' and question_triplet.predicate.lower() == 'likes':
+            o_person = select_person(question_triplet.object)
+            answer = '{} like {}.'
+            for person in persons:
+                if o_person in person.likes:
+                    answers.append(answer.format(person,o_person))
+        # (WHO, does P, like)
+        elif question_triplet.object.lower() == 'who' and question_triplet.predicate.lower() == 'does like':
+            s_person = select_person(question_triplet.subject)
+            answer = '{} like {}.'
+            for person in persons:
+                if person in s_person.likes:
+                    answers.append(answer.format(s_person, person))
+
+        #(DOES, P, like, P)
+        elif (question_triplet.subject.startswith('Does') or question_triplet[0].subject.startswith('does')) and question_triplet.predicate == 'like':
+                sentence = question_triplet.subject + ' ' + question_triplet.predicate + ' ' + question_triplet.object
+                doc = nlp(unicode(sentence))
+                for t in doc:
+                    #print(t.text, t.pos_, t.head, t.ent_type_)
+                    if t.pos_ == 'PROPN' and (t.text in question_triplet.subject):
+                        s_person = select_person(t.text)
+                    if t.pos_ == 'PROPN' and (t.text in question_triplet.object):
+                        o_person = select_person(t.text)
+                like_persons = get_persons_likes(s_person.name)
+                not_like_persons = get_persons_not_likes(s_person.name)
+                if o_person in like_persons:
+                    answer = "Yes, {} likes {}."
+                    answers.append(answer.format(s_person.name, o_person.name))
+                elif o_person in not_like_persons:
+                    answer = "No, {} doesn't like {}."
+                    answers.append(answer.format(s_person.name, o_person.name))
+
+                else:
+                    answers.append("I don't know.")
+        else:
+            answers.append("I don't know.")
+    except:
+        answers = []
+        doc = nlp(unicode(question))
+        for t in doc:
+            if t.pos_ == 'NOUN' and t.lemma_ == "what":
+                for t in doc:
+                    if t.pos_ == 'PROPN' and t.ent_type_ == 'PERSON':
+                        person = select_person(t.text)
+                        if person:
+                            for t in doc:
+                                if t.pos_ == 'NONE' and t.head == 'of' and t.lemma_ == 'cat' or t.lemma_ == 'dog':
+                                    pet = get_persons_pet(person.name)
+                                    if pet.type == 'dog':
+                                        answer = '{} has a dog named {}.'
+                                        answers.append(answer.format(person.name, pet.name))
+                                    elif pet.type == 'cat':
+                                        answer = "{} has a cat named {}."
+                                        answers.append(answer.format(person.name,pet.name))
+            elif len(answers) == 0:
+                answers.append("I don't know.")
     for answer in answers:
         print(answer)
-
 
 # In[25]:
 
 
 def main():
     process_data_from_input_file()
-    answer_question('Who has a dog?')
-    answer_question('Who likes Mary?')
+    answer_question('Who has a cat?')
+    answer_question("What's the name of Bob's dog?")
+    answer_question("what's the name of Joe's baby?")
+    answer_question("what's the name of Mike's cat?")
 
 
 # In[26]:
