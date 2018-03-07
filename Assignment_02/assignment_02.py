@@ -610,7 +610,7 @@ def extract_store_5():
     return None
 
 
-# In[35]:
+# In[61]:
 
 
 def answer_question_5():  
@@ -636,7 +636,6 @@ def answer_question_5():
     
     q5 = df[['Player', 'Team', 'Country']][df.Country.isin(match_list)]
     answer = q5
-    print(answer)
     return answer
 
 
@@ -810,7 +809,7 @@ print('Question_4:')
 answer_question_4()
 
 
-# In[55]:
+# In[62]:
 
 
 print('Question_5:')
