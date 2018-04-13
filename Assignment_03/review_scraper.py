@@ -2,9 +2,6 @@ from selenium import webdriver
 import random
 import time
 import pandas as pd
-import warnings
-warnings.filterwarnings("ignore")
-import json
 import bs4
 from datetime import datetime
 
