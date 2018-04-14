@@ -22,12 +22,12 @@ def verified_only(driver):
 
 def one_page_data_extracter(driver):
     start_date = 'January 1, 2017'
-    start_date = datetime.strftime(datetime.strptime(start_date, '%B %d, %Y'), '%Y-%m-%d')
+    start_date = datetime.strftime(datetime.strptime(start_date,'%B %d, %Y'), '%Y-%m-%d')
 
     element = driver.find_element_by_id('cm_cr-review_list')
     data_html = element.get_attribute('innerHTML')
-    soup = bs4.BeautifulSoup(data_html, 'html5lib')
-    reviews_li = soup.find_all('div', attrs={'data-hook': "review"})
+    soup = bs4.BeautifulSoup(data_html,'html5lib')
+    reviews_li = soup.find_all('div', attrs={'data-hook':"review"})
     user_review_info_li = []
     error = 0
     error_li = []
@@ -35,28 +35,45 @@ def one_page_data_extracter(driver):
         review_tag = reviews_li[i]
         review_tag_attr = review_tag.attrs
 
-        date_tag = review_tag.find('span', attrs={'data-hook': 'review-date'})
+        date_tag = review_tag.find('span', attrs={'data-hook':'review-date'})
         review_date_raw = date_tag.text
         review_date = review_date_raw[3:]
-        review_date = datetime.strftime(datetime.strptime(review_date, '%B %d, %Y'), '%Y-%m-%d')
+        review_date = datetime.strftime(datetime.strptime(review_date,'%B %d, %Y'), '%Y-%m-%d')
 
         if review_date >= start_date:
 
-            user_id = review_tag_attr['id']
+            review_id = review_tag_attr['id']
 
-            star_tag = review_tag.find('a', attrs={'class': 'a-link-normal'}).attrs
-            review_rating = star_tag['title']
+            star_tag = review_tag.find('a', attrs= {'class':'a-link-normal'}).attrs
+            review_rating_str = star_tag['title']
+            if review_rating_str == '5.0 out of 5 stars':
+                review_rating = 5
+            elif review_rating_str == '4.0 out of 5 stars':
+                review_rating = 4
+            elif review_rating_str == '3.0 out of 5 stars':
+                review_rating = 3
+            elif review_rating_str == '2.0 out of 5 stars':
+                review_rating = 2
+            elif review_rating_str == '1.0 out of 5 stars':
+                review_rating = 1
+            else:
+                review_rating = review_rating_str
 
-            title_tag = review_tag.find('a', attrs={'data-hook': 'review-title'})
+            title_tag = review_tag.find('a', attrs= {'data-hook':'review-title'})
             review_title = title_tag.text
 
-            name_tag = review_tag.find('a', attrs={'data-hook': 'review-author'})
+            name_tag = review_tag.find('a', attrs={'data-hook':'review-author'})
             user_name = name_tag.text
+            user_id_raw = name_tag.attrs['href']
+            start_idx = user_id_raw.find('account.')+8
+            end_idx = user_id_raw.find('/ref=')
+            user_id = user_id_raw[start_idx:end_idx]
 
-            product_type_tag = review_tag.find('a', attrs={'data-hook': 'format-strip'})
+
+            product_type_tag = review_tag.find('a', attrs={'data-hook':'format-strip'})
             product_pattern = product_type_tag.text
 
-            review_text_tag = review_tag.find('span', attrs={'data-hook': 'review-body'})
+            review_text_tag = review_tag.find('span', attrs={'data-hook':'review-body'})
             review_text_raw = review_text_tag.text
             start_idx = review_text_raw.find('Install Flash Player')
             if start_idx != -1:
@@ -65,19 +82,18 @@ def one_page_data_extracter(driver):
             else:
                 review_text = review_text_raw
 
-            user_review_info = {'user_id': user_id, "review_rating": review_rating,
-                                "review_title": review_title, "user_name": user_name,
-                                "review_date": review_date, "product_pattern": product_pattern,
-                                "review_text": review_text}
+            user_review_info = {'review_id':review_id, "review_rating":review_rating,
+                                "review_title":review_title, "user_name":user_name, "user_id":user_id,
+                                "review_date":review_date, "product_pattern":product_pattern,
+                                "review_text":review_text}
 
             user_review_info_li.append(user_review_info)
         else:
-            print('The date before January 1st, 2017!')
             error += 1
             error_li.append(review_date)
             log = [error, error_li]
 
-    return driver, user_review_info_li, log
+    return driver,user_review_info_li, log
 
 def next_page(driver):
     element = driver.find_element_by_class_name("a-last")
